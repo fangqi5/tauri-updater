@@ -4,6 +4,7 @@ use reqwest;
 use std::env;
 use std::process::Command;
 use std::str;
+use serde_json::Value;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -27,18 +28,19 @@ async fn node_hello_express() -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn check_app_update() -> Result<String, String> {
+async fn check_app_update() -> Result<Value, Value> {
     println!("start check app update",);
-    let resp = reqwest::get("http://localhost:3000/checkUpdate")
+    let response = reqwest::get("http://localhost:3000/checkUpdate")
         .await
         .map_err(|e| format!("Failed to write to temp file: {}", e))?;
-    println!(
-        "Response: {:?}",
-        resp.text()
-            .await
-            .map_err(|e| format!("Failed to write to temp file: {}", e))?
-    );
-    Ok("hello".to_string())
+        let json: Value = response.json().await.map_err(|e| format!("Failed to write to temp file: {}", e))?;
+    if let Some(needUpdate) = json.get("needUpdate") {
+        println!("needUpdate: {}", needUpdate);
+    } else {
+        println!("Key 'message' not found in the JSON response.");
+    }
+    Ok(json)
+
 }
 
 static NODE_DIR_STR: &str = "node/bin/node";
@@ -63,7 +65,7 @@ fn main() {
     }
 
     tauri::Builder::default()
-        .setup(|_| {
+        .setup(|_app| {
             // 启动Node.js服务器
             Command::new(NODE_DIR_STR)
                 .arg("node/server.js")

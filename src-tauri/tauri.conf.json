@@ -42,7 +42,7 @@
         },
         "updater": {
             "active": true,
-            "dialog": true,
+            "dialog": false,
             "endpoints": [
                 "http://localhost:3000/checkUpdate"
             ],

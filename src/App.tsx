@@ -1,11 +1,64 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
+import {
+    checkUpdate,
+    installUpdate,
+    onUpdaterEvent,
+} from '@tauri-apps/api/updater'
+import { relaunch } from '@tauri-apps/api/process';
+import { Modal,notification } from 'antd'
 import "./App.css";
+
+const { confirm } = Modal;
 
 function App() {
     const [greetMsg, setGreetMsg] = useState("");
     const [name, setName] = useState("");
+
+    const check = async () => {
+        try {
+            const res = await checkUpdate()
+            console.log("shouldUpdate======>",res)
+            const { shouldUpdate, manifest = {} } = res;
+            if (shouldUpdate) {
+                // You could show a dialog asking the user if they want to install the update here.
+                console.log(
+                    `Installing update ${manifest?.version}, ${manifest?.date}, ${manifest?.body}`
+                )
+
+                confirm({
+                    title: '检测到APP有更新，请确认是否更新?',
+                    content: 'Some descriptions',
+                    async onOk() {
+                        try {
+                            notification.info({
+                                message: '正在下载更新...',
+                                duration: 3000,
+                            });
+                            await installUpdate();
+                            await relaunch();
+                        } catch (e) {
+                            notification.error({
+                                message: '下载更新失败',
+                                description: e?.toString() || '',
+                            });
+                        }
+                    },
+                    onCancel() {
+                        console.log('Cancel');
+                    },
+                });
+
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    useEffect(()=>{
+        check()
+    },[])
 
     async function greet() {
         // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
