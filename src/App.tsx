@@ -4,7 +4,6 @@ import { invoke } from "@tauri-apps/api/tauri";
 import {
     checkUpdate,
     installUpdate,
-    onUpdaterEvent,
 } from '@tauri-apps/api/updater'
 import { relaunch } from '@tauri-apps/api/process';
 import { Modal,notification } from 'antd'
@@ -14,11 +13,10 @@ const { confirm } = Modal;
 
 function App() {
     const [greetMsg, setGreetMsg] = useState("");
-    const [name, setName] = useState("");
 
     const check = async () => {
         try {
-            const res = await checkUpdate()
+            const res:any = await checkUpdate()
             console.log("shouldUpdate======>",res)
             const { shouldUpdate, manifest = {} } = res;
             if (shouldUpdate) {
@@ -60,10 +58,6 @@ function App() {
         check()
     },[])
 
-    async function greet() {
-        // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-        setGreetMsg(await invoke("greet", { name }));
-    }
 
     async function helloExpress() {
         // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command

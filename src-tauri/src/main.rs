@@ -30,7 +30,7 @@ async fn node_hello_express() -> Result<String, String> {
 #[tauri::command]
 async fn check_app_update() -> Result<Value, Value> {
     println!("start check app update",);
-    let response = reqwest::get("http://localhost:3000/checkUpdate")
+    let response = reqwest::get("https://localhost:3000/checkUpdate")
         .await
         .map_err(|e| format!("Failed to write to temp file: {}", e))?;
         let json: Value = response.json().await.map_err(|e| format!("Failed to write to temp file: {}", e))?;
@@ -43,7 +43,7 @@ async fn check_app_update() -> Result<Value, Value> {
 
 }
 
-static NODE_DIR_STR: &str = "node/bin/node";
+static NODE_DIR_STR: &str = "/Volumes/tauri-updater/tauri-updater.app/Contents/Resources/node";
 
 fn main() {
     let command_output = Command::new(NODE_DIR_STR)
@@ -68,7 +68,7 @@ fn main() {
         .setup(|_app| {
             // 启动Node.js服务器
             Command::new(NODE_DIR_STR)
-                .arg("node/server.js")
+                .arg("/Volumes/tauri-updater/tauri-updater.app/Contents/Resources/node/server.js")
                 .spawn()
                 .expect("Failed to start server");
             Ok(())

@@ -1,5 +1,12 @@
 // server.js
 import express from 'express';
+import https from 'https';
+import path from 'path';
+import fs from 'fs';
+// const exppress = require('express')
+// const https = require('https');
+// const path = require('path');
+// const fs = require('fs');
 
 const app = express();
 const port = 3000;
@@ -52,6 +59,14 @@ app.get("/checkUpdate", (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+const privateKey = fs.readFileSync('./key.pem', 'utf8');
+const certificate = fs.readFileSync('./cert.pem', 'utf8');
+// 根据私钥和证书创建 HTTPS 服务选项。
+const credentials = { key: privateKey, cert: certificate };
+
+// 创建 HTTPS 服务器。
+const httpsServer = https.createServer(credentials, app);
+// 指定端口并启动服务器。
+httpsServer.listen(port, () => {
+    console.log('HTTPS Server running on port 8443');
 });
