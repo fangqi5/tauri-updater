@@ -2,30 +2,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use reqwest;
 use std::env;
-use std::process::Command;
+use std::fs::File;
 use std::str;
-use serde_json::Value;
-
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
-async fn node_hello_express() -> Result<String, String> {
-    println!("start request",);
-    let resp = reqwest::get("http://localhost:3000/")
-        .await
-        .map_err(|e| format!("Failed to write to temp file: {}", e))?;
-    println!(
-        "Response: {:?}",
-        resp.text()
-            .await
-            .map_err(|e| format!("Failed to write to temp file: {}", e))?
-    );
-    Ok("Hello! You've been greeted from Rust!".to_string())
-}
+use std::io::Read;
+use std::process::{Command};
+use serde_json::{json, Value};
+use simplelog::*;
+use log::{error, info}; // 导入log宏
+use chrono::offset::FixedOffset;
 
 #[tauri::command]
 async fn check_app_update() -> Result<Value, Value> {
@@ -40,43 +24,86 @@ async fn check_app_update() -> Result<Value, Value> {
         println!("Key 'message' not found in the JSON response.");
     }
     Ok(json)
+}
+
+#[tauri::command]
+async fn get_npm_version() -> Result<String, String> {
+    let node_dir_srt = "/Applications/tauri-updater.app/Contents/Resources/node/bin/node";
+    let npm_dir_srt = "/Applications/tauri-updater.app/Contents/Resources/node/bin";
+    let output = Command::new(node_dir_srt.to_string())
+        .arg("index.js")
+        .arg("--version")
+        .current_dir("/Applications/tauri-updater.app/Contents/Resources/node/lib/node_modules/npm")
+        // .env("NODE_PATH", "/Applications/tauri-updater.app/Contents/Resources/node/lib/node_modules")
+        // .env("PATH", "/Applications/tauri-updater.app/Contents/Resources/node/bin")
+        .output().expect("Failed to get npm version");
+    let stdout = str::from_utf8(&output.stdout).unwrap();
+    let stderr = str::from_utf8(&output.stderr).unwrap();
+    if output.status.success() {
+        info!("Npm version: {}", stdout);
+        error!("Npm version: {}", stdout);
+          Ok(format!("current version: {}",stdout))
+    } else {
+        info!("Get npm version Error: {}", stderr);
+        error!("Get npm version Error: {}", stderr);
+        Err(format!("get version error: {}",stderr))
+    }
 
 }
 
-static NODE_DIR_STR: &str = "/Volumes/tauri-updater/tauri-updater.app/Contents/Resources/node";
 
-fn main() {
-    let command_output = Command::new(NODE_DIR_STR)
-        .arg("-v")
-        .output()
-        .expect("Failed to execute Node.js command");
+ fn main() {
+    let timezone_offset = 8 * 3600; // 比如 UTC+5 时间区的一天的秒数
 
-    let stdout = str::from_utf8(&command_output.stdout).unwrap();
-    let stderr = str::from_utf8(&command_output.stderr).unwrap();
-    if command_output.status.success() {
-        println!("Node.js version: {}", stdout);
-        // // 更新 PATH 环境变量以包含 node 二进制目录
-        let path = env::var("PATH").unwrap();
-        let new_path = format!("{}:{}", NODE_DIR_STR, path);
-        env::set_var("PATH", &new_path);
-//         println!("Updated PATH: {}", new_path.clone());
-    } else {
-        println!("Error: {}", stderr);
-    }
+    // 创建 FixedOffset 来表示你的时区
+    let timezone = FixedOffset::east(timezone_offset);
+    // 配置 logger
+    let config = ConfigBuilder::new()
+        .set_time_offset(timezone)
+        .build();
+    WriteLogger::init(
+        LevelFilter::Info,
+        config,
+        File::create("/Users/fangqi/Desktop/Rust/log_file.log").unwrap(),
+    ).unwrap();
 
     tauri::Builder::default()
         .setup(|_app| {
+            let node_dir_srt = "/Applications/tauri-updater.app/Contents/Resources/node/bin/node";
             // 启动Node.js服务器
-            Command::new(NODE_DIR_STR)
-                .arg("/Volumes/tauri-updater/tauri-updater.app/Contents/Resources/node/server.js")
-                .spawn()
-                .expect("Failed to start server");
+             let node_output = Command::new(node_dir_srt.to_string())
+                .arg("server.js")
+                .current_dir("/Applications/tauri-updater.app/Contents/Resources/node")
+                .spawn();
+            match node_output {
+                Ok(child) => {
+                    info!("Server started with PID: {}", child.id());
+                }
+                Err(e) => {
+                    error!("Failed to start server: {}", e);
+                }
+            };
+
+
+            let output = Command::new(node_dir_srt.to_string())
+                .arg("index.js")
+                .arg("--version")
+                .current_dir("/Applications/tauri-updater.app/Contents/Resources/node/lib/node_modules/npm")
+                .output().expect("Failed to get npm version");
+            let stdout = str::from_utf8(&output.stdout).unwrap();
+            let stderr = str::from_utf8(&output.stderr).unwrap();
+            if output.status.success() {
+                info!("Npm version: {}", stdout);
+                error!("Npm version: {}", stdout);
+            } else {
+                info!("Get npm version Error: {}", stderr);
+                error!("Get npm version Error: {}", stderr);
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
-            node_hello_express,
-            check_app_update
+            check_app_update,
+            get_npm_version
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

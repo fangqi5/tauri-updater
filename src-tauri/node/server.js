@@ -1,12 +1,12 @@
 // server.js
-import express from 'express';
-import https from 'https';
-import path from 'path';
-import fs from 'fs';
-// const exppress = require('express')
-// const https = require('https');
-// const path = require('path');
-// const fs = require('fs');
+// import express from 'express';
+// import https from 'https';
+// import path from 'path';
+// import fs from 'fs';
+const express = require('express')
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const port = 3000;
@@ -59,8 +59,8 @@ app.get("/checkUpdate", (req, res) => {
     }
 });
 
-const privateKey = fs.readFileSync('./key.pem', 'utf8');
-const certificate = fs.readFileSync('./cert.pem', 'utf8');
+const privateKey = fs.readFileSync(' /Applications/tauri-updater.app/Contents/Resources/node/key.pem', 'utf8');
+const certificate = fs.readFileSync('/Applications/tauri-updater.app/Contents/Resources/node/cert.pem', 'utf8');
 // 根据私钥和证书创建 HTTPS 服务选项。
 const credentials = { key: privateKey, cert: certificate };
 

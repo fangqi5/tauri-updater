@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
@@ -12,7 +12,6 @@ import "./App.css";
 const { confirm } = Modal;
 
 function App() {
-    const [greetMsg, setGreetMsg] = useState("");
 
     const check = async () => {
         try {
@@ -53,16 +52,24 @@ function App() {
             console.error(error)
         }
     }
+    async function onSubmit() {
+       try{
+           const res = await invoke("get_npm_version");
+           notification.success({
+               message: 'Success',
+               description: `Error: ${res}`,
+           });
+       }catch (error){
+           notification.error({
+               message: 'Error executing command',
+               description: `Error: ${error}`,
+           });
+       }
+    }
 
     useEffect(()=>{
         check()
     },[])
-
-
-    async function helloExpress() {
-        // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-        setGreetMsg(await invoke("check_app_update"));
-    }
 
     return (
         <div className="container">
@@ -98,13 +105,13 @@ function App() {
                 className="row"
                 onSubmit={(e) => {
                     e.preventDefault();
-                    helloExpress();
+                    onSubmit()
                 }}
             >
-                <button type="submit">检查更新</button>
+                {/*<button type="submit">检查更新</button>*/}
+                <button type="submit">获取版本</button>
             </form>
 
-            <p>{greetMsg}</p>
         </div>
     );
 }
