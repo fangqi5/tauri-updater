@@ -55,16 +55,6 @@
                 "icons/icon.icns",
                 "icons/icon.ico"
             ]
-        },
-        "updater": {
-            "active": true,
-            "dialog": false,
-            "endpoints": [
-            ],
-            "windows": {
-                "installMode": "passive",
-                "installerArgs": []
-            }
         }
     }
 }
