@@ -121,11 +121,11 @@ async fn install_pnpm() -> Result<String, String> {
     let config = ConfigBuilder::new()
         .set_time_offset(timezone)
         .build();
-    WriteLogger::init(
-        LevelFilter::Info,
-        config,
-        File::create("/Users/fangqi/Desktop/Rust/log_file.log").unwrap(),
-    ).unwrap();
+    // WriteLogger::init(
+    //     LevelFilter::Info,
+    //     config,
+    //     File::create("/Users/fangqi/Desktop/Rust/log_file.log").unwrap(),
+    // ).unwrap();
 
     tauri::Builder::default()
         .setup(|_app| {
