@@ -41,7 +41,7 @@
         "bundle": {
             "windows": {
                 "webviewInstallMode": {
-                    "type": "embedBootstrapper"
+                    "type": "offlineInstaller"
                 }
             },
             "resources": ["node"],
