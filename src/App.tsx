@@ -54,7 +54,7 @@ function App() {
     }
     async function onSubmit() {
        try{
-           const res = await invoke("get_npm_version");
+           const res = await invoke("install_pnpm");
            notification.success({
                message: 'Success',
                description: `Error: ${res}`,
